@@ -1,0 +1,84 @@
+﻿<Window x:Class="GKH.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GKH"
+        mc:Ignorable="d"
+        Title="GKH" Height="600" Width="600"
+        Closed="MainWindow_OnClosed">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 1st Row: Search Button -->
+        <Button Width="100" Margin="5" Grid.Row="0" Content="Искать" HorizontalAlignment="Left" VerticalAlignment="Top"
+                Name="SearchButton"
+                Click="SearchButton_OnClick"/>
+
+        <StackPanel Margin="5" Grid.Row="1" Orientation="Horizontal">
+            <TextBlock Text="Выберите файл: "/>
+            <Button Margin="10 0 0 0" Width="100" Name="ChooseFileButton" Click="ChooseFileButton_OnClick">Выбрать</Button>
+            <Label Margin="10 0 0 0" Width="400" Name="FileNameLabel"></Label>
+        </StackPanel>
+
+        
+        <!-- 2nd Row: List Selector -->
+        <StackPanel Margin="5" Grid.Row="2" Orientation="Horizontal">
+            <TextBlock Text="Лист: "/>
+            <ComboBox Margin="10 0 0 0" Width="100"
+                      Name="WorksheetComboBox"
+                      SelectionChanged="WorksheetComboBox_OnSelectionChanged"/>
+        </StackPanel>
+
+        <!-- 3rd Row: Matrix Coordinates -->
+        <StackPanel Margin="5" Grid.Row="3" Orientation="Horizontal">
+            <TextBlock Text="Координаты матрицы (0,0): "/>
+            <TextBlock Margin="10 0 0 0" Text="X (число)"/>
+            <TextBox Name="XTextBox" Margin="10 0 0 0" Width="50"
+                     SelectionChanged="XTextBox_OnSelectionChanged"/>
+            <TextBlock Margin="20 0 0 0" Text="Y (буква): "/>
+            <TextBox Name="YTextBox" Margin="10 0 0 0" Width="50"
+                     SelectionChanged="YTextBox_OnSelectionChanged"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Margin="5" Orientation="Horizontal">
+            <TextBlock Text="Размер: "/>
+            <TextBox Name="MatrixSizeTextBox" Margin="10 0 0 0" Width="50"
+                     SelectionChanged="MatrixSizeTextBox_OnSelectionChanged"/>
+        </StackPanel>
+        
+        <!-- 4th Row: Iterations -->
+        <StackPanel Grid.Row="5" Margin="5" Orientation="Horizontal">
+            <TextBlock Text="Итерации: "/>
+            <TextBox Name="IterationsTextBox" Margin="10 0 0 0" Width="50"
+                     SelectionChanged="IterationsTextBox_OnSelectionChanged"/>
+        </StackPanel>
+
+        <!-- 5th Row: Separator -->
+        <Separator Grid.Row="7" Margin="0,10,0,10"/>
+
+        <StackPanel Margin="5" Grid.Row="6" Orientation="Horizontal">
+            <TextBlock Text="Метод решения: "/>
+            <ComboBox Margin="10 0 0 0" Width="100"
+                      Name="SolverComboBox"
+                      SelectionChanged="SolverComboBox_OnSelectionChanged"/>
+        </StackPanel>
+        
+        <!-- 6th Row: Log -->
+        <TextBlock Margin="6" Grid.Row="8" Text="Лог:" Name="LogTitleTextBlock"/>
+
+        <!-- 7th Row: Log Text Area -->
+        <TextBox Name="LogTextBox" Margin="5" Grid.Row="9" FontSize="12" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
+    </Grid>
+</Window>
