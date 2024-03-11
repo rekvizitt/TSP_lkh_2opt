@@ -21,8 +21,7 @@ namespace GKH;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private static readonly object Lock = new();
-    private int _selectedSolverIndex = 0;
+    private int _selectedSolverIndex;
 
     public MainWindow()
     {
@@ -44,6 +43,10 @@ public partial class MainWindow : Window
         {
             Log("Проблема с чтением данных. Проверьте массив заказов");
         }
+        catch (FileNotFoundException)
+        {
+            Log("Файл не найден");
+        }
         catch (Exception e)
         {
             Log(e.Message);
@@ -52,9 +55,7 @@ public partial class MainWindow : Window
 
         SolverComboBox.ItemsSource = new List<string> { "LKH", "2opt" };
         SolverComboBox.SelectedIndex = 1;
-
-        Log("Данные успешно загружены\n");
-
+        
         return;
 
         void ParseGlobals()
@@ -96,8 +97,9 @@ public partial class MainWindow : Window
             try
             {
                 SelectWorksheet();
+                Log("Данные успешно загружены\n");
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 Log("Проблемы с чтением файла. Убедитесь, что файл существует в формате .xslx");
             }
