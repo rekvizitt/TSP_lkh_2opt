@@ -25,6 +25,7 @@ namespace GKH
             dynamic distances = Globals.Distances;
 
             dynamic edges = elkai.DistanceMatrix(distances);
+
             dynamic solution = edges.solve_tsp(Globals.Iterations);
 
             // solution is loop by default so pop

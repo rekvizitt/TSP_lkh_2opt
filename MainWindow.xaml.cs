@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using Python.Runtime;
 
@@ -22,6 +23,8 @@ namespace GKH;
 public partial class MainWindow : Window
 {
     private int _selectedSolverIndex;
+    private volatile bool _shouldStopCalculation = false;
+    private bool _isRunning = false;
 
     public MainWindow()
     {
@@ -55,7 +58,7 @@ public partial class MainWindow : Window
 
         SolverComboBox.ItemsSource = new List<string> { "LKH", "2opt" };
         SolverComboBox.SelectedIndex = 1;
-        
+
         return;
 
         void ParseGlobals()
@@ -77,12 +80,13 @@ public partial class MainWindow : Window
         if (worksheetIndex != -1)
         {
             WorksheetComboBox.SelectedIndex = worksheetIndex;
+            Log("Данные успешно загружены");
         }
     }
 
     private void Log(string message)
     {
-        Dispatcher.Invoke(() => { LogTextBox.Text += $"{message}"; });
+        Dispatcher.Invoke(() => { LogTextBox.Text += $"{message}\n"; });
     }
 
     private void ChooseFileButton_OnClick(object sender, RoutedEventArgs e)
@@ -97,7 +101,7 @@ public partial class MainWindow : Window
             try
             {
                 SelectWorksheet();
-                Log("Данные успешно загружены\n");
+                Log("Данные успешно загружены");
             }
             catch (Exception)
             {
@@ -114,7 +118,7 @@ public partial class MainWindow : Window
 
     private void WorksheetComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        Globals.SelectedWorksheet = WorksheetComboBox.SelectedItem.ToString();
+        Globals.SelectedWorksheet = WorksheetComboBox.SelectedItem.ToString()!;
     }
 
     private void XTextBox_OnSelectionChanged(object sender, RoutedEventArgs e)
@@ -143,15 +147,25 @@ public partial class MainWindow : Window
 
     private void SearchButton_OnClick(object sender, RoutedEventArgs e)
     {
+        if (_isRunning)
+        {
+            _shouldStopCalculation = true;
+            return;
+        }
+
+        int iterationsPassed = 0;
         var searchThread = new Thread((startButton) =>
         {
+            _shouldStopCalculation = false;
+            _isRunning = true;
+            
             Dispatcher.Invoke(() =>
             {
-                (startButton as Button)!.IsEnabled = false;
+                (startButton as Button)!.Content = "Остановить";
                 LogTitleTextBlock.Text = "Идет решение: ожидайте, программа отобразит его автоматически";
             });
 
-            Log("Решение...\n");
+            Log("Решение...");
             Globals.Distances = ExcelParser.TryParse();
             var solutions = new ConcurrentBag<int[]>();
             var totalStopwatch = Stopwatch.StartNew();
@@ -162,10 +176,16 @@ public partial class MainWindow : Window
                 {
                     var semaphoreSlim = new SemaphoreSlim(Environment.ProcessorCount - 1);
                     var threads = new ConcurrentDictionary<Thread, int>();
-
-
+                    
                     for (var iteration = 0; iteration < Globals.Iterations; iteration++)
                     {
+                        if (_shouldStopCalculation)
+                        {
+                            Log("Остановка");
+                            iterationsPassed = iteration;
+                            break;
+                        }
+
                         semaphoreSlim.Wait();
 
                         var thread = new Thread(values =>
@@ -182,8 +202,6 @@ public partial class MainWindow : Window
                             solutionsBag.Add(solver.Solution);
 
                             stopwatch.Stop();
-                            // Log($"{i + 1}: {stopwatch.ElapsedMilliseconds} мс\n");
-                            // Console.WriteLine(i);
                             threadList.TryRemove(currentThread, out _);
                             semaphore.Release();
                         }) { IsBackground = true, Priority = ThreadPriority.Highest };
@@ -204,12 +222,23 @@ public partial class MainWindow : Window
                 }
                 case Algorithms.Lkh:
                 {
+                    Dispatcher.Invoke(() =>
+                    {
+                        SearchButton.IsEnabled = false;
+                    }); 
+                    
                     var solver = new LkhSolver();
 
                     solver.Solve();
                     solutions.Add(solver.Solution);
 
                     PythonEngine.Shutdown();
+                    
+                    Dispatcher.Invoke(() =>
+                    {
+                        SearchButton.IsEnabled = true;
+                    }); 
+                    
                     break;
                 }
             }
@@ -218,17 +247,24 @@ public partial class MainWindow : Window
             var bestSolution = solutions.MinBy(ISolver.GetSum)!;
             totalStopwatch.Stop();
 
-            Log($"Решение: {ISolver.PrintSolution(bestSolution)}\n");
-            Log($"Суммы переходов: {ISolver.PrintCosts(bestSolution, ISolver.GetCosts(bestSolution))}\n");
-            Log($"Полная сумма: {ISolver.GetSum(bestSolution)}\n");
-            Log($"Всего затрачено: {totalStopwatch.ElapsedMilliseconds} мс\n");
-
+            Log($"Решение: {ISolver.PrintSolution(bestSolution)}");
+            Log($"Суммы переходов: {ISolver.PrintCosts(bestSolution, ISolver.GetCosts(bestSolution))}");
+            Log($"Полная сумма: {ISolver.GetSum(bestSolution)}");
+            Log($"Всего затрачено: {totalStopwatch.ElapsedMilliseconds} мс");
+            
+            if (iterationsPassed != 0)
+            {
+                Log($"Итераций: {iterationsPassed}");
+            }
+            
             Dispatcher.Invoke(() =>
             {
-                (startButton as Button)!.IsEnabled = true;
+                (startButton as Button)!.Content = "Искать";
                 LogTitleTextBlock.Text = "Лог:";
                 LogTextBox.ScrollToEnd();
             });
+
+            _isRunning = false;
         }) { Priority = ThreadPriority.Highest };
 
         searchThread.Start(SearchButton);
