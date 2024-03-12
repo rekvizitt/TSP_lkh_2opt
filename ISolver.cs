@@ -2,15 +2,12 @@
 {
     public interface ISolver
     {
-        public int[] Solution
-        {
-            get;
-        }
-        
+        public int[] Solution { get; }
+
         public static int[] GetCosts(int[] solution)
         {
             var costs = new int[solution.Length - 1];
-        
+
             for (var i = 0; i < solution.Length - 1; i++)
             {
                 costs[i] = Globals.Distances[solution[i]][solution[i + 1]];
@@ -20,7 +17,7 @@
         }
 
         public void Solve();
-        
+
         public static int GetSum(IReadOnlyList<int> solution)
         {
             var sum = 0;
@@ -36,7 +33,7 @@
         public static string PrintSolution(int[] solution)
         {
             var result = "";
-            for (int i = 0; i < solution.Length - 1; i++)
+            for (var i = 0; i < solution.Length - 1; i++)
             {
                 result += $"{solution[i] + 1} -> ";
             }
@@ -49,7 +46,7 @@
         public static string PrintCosts(int[] solution, int[] costs)
         {
             var result = "";
-            for (int i = 0; i < costs.Length - 1; i++)
+            for (var i = 0; i < costs.Length - 1; i++)
             {
                 result += $"{costs[i]} -> ";
             }

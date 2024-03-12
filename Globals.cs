@@ -5,55 +5,60 @@ using System.Text.Json;
 namespace GKH
 {
     // Used to store global state, including matrix data and file data (for convenience)
-public static class Globals
-{
-    public static string FileName { get; internal set; }
-    public static string SelectedWorksheet { get; internal set; }
-    public static int MatrixSize { get; internal set; }
-    public static int MatrixX { get; internal set; }
-    public static int MatrixY { get; internal set; }
-    public static int Iterations { get; internal set; }
-
-    public static int[][] Distances { get; internal set; }
-
-    public static void SaveState()
+    public static class Globals
     {
-        var state = new GlobalsState()
+        public static readonly string CurrentDirectoryPath =
+            Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+
+        public static string FileName { get; internal set; }
+        public static string SelectedWorksheet { get; internal set; }
+        public static int MatrixSize { get; internal set; }
+        public static int MatrixX { get; internal set; }
+        public static int MatrixY { get; internal set; }
+        public static int Iterations { get; internal set; }
+        public static int SelectedMethod { get; internal set; }
+
+        public static int[][] Distances { get; internal set; }
+
+        public static void SaveState()
         {
-            MatrixSize = Globals.MatrixSize,
-            MatrixX = Globals.MatrixX,
-            MatrixY = Globals.MatrixY,
-            Iterations = Globals.Iterations,
-            FileName = Globals.FileName,
-            SelectedWorksheet = Globals.SelectedWorksheet
-        };
-        
-        File.WriteAllText(Path.Combine(CurrentDirectoryPath, "state.json"), JsonSerializer.Serialize(state));
-    }
+            var state = new GlobalsState
+            {
+                MatrixSize = MatrixSize,
+                MatrixX = MatrixX,
+                MatrixY = MatrixY,
+                Iterations = Iterations,
+                FileName = FileName,
+                SelectedWorksheet = SelectedWorksheet,
+                SelectedMethod = SelectedMethod
+            };
 
-    public static void LoadState()
-    {
-        string json = File.ReadAllText(Path.Combine(CurrentDirectoryPath, "state.json"));
-        GlobalsState state = JsonSerializer.Deserialize<GlobalsState>(json)!;
+            File.WriteAllText(Path.Combine(CurrentDirectoryPath, "state.json"), JsonSerializer.Serialize(state));
+        }
 
-        Globals.MatrixSize = state.MatrixSize;
-        Globals.MatrixX = state.MatrixX;
-        Globals.MatrixY = state.MatrixY;
-        Globals.Iterations = state.Iterations;
-        Globals.FileName = state.FileName;
-        Globals.SelectedWorksheet = state.SelectedWorksheet;
+        public static void LoadState()
+        {
+            var json = File.ReadAllText(Path.Combine(CurrentDirectoryPath, "state.json"));
+            var state = JsonSerializer.Deserialize<GlobalsState>(json)!;
+
+            MatrixSize = state.MatrixSize;
+            MatrixX = state.MatrixX;
+            MatrixY = state.MatrixY;
+            Iterations = state.Iterations;
+            FileName = state.FileName;
+            SelectedWorksheet = state.SelectedWorksheet;
+            SelectedMethod = state.SelectedMethod;
+        }
+
+        internal class GlobalsState
+        {
+            public int MatrixSize { get; set; }
+            public int MatrixX { get; set; }
+            public int MatrixY { get; set; }
+            public int Iterations { get; set; }
+            public string FileName { get; set; }
+            public string SelectedWorksheet { get; set; }
+            public int SelectedMethod { get; set; }
+        }
     }
-    
-    internal class GlobalsState
-    {
-        public int MatrixSize { get; set; }
-        public int MatrixX { get; set; }
-        public int MatrixY { get; set; }
-        public int Iterations { get; set; }
-        public string FileName { get; set; }
-        public string SelectedWorksheet { get; set; }
-    }
-    
-    public static readonly string CurrentDirectoryPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-}
 }

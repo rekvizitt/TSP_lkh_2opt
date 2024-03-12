@@ -1,4 +1,6 @@
-﻿using Python.Runtime;
+﻿using System.Diagnostics;
+using System.IO;
+using System.Text;
 
 namespace GKH
 {
@@ -8,34 +10,40 @@ namespace GKH
 
         public void Solve()
         {
-            Solution = new int[Globals.MatrixSize];
-            
-            // yes, this is python in c#
-            // necessary to start
-            if (!PythonEngine.IsInitialized)
+            // to solve using lkh we use python script, to transfer data between script and this app we use temp.txt
+            using (var streamWriter = new StreamWriter("./temp.txt", Encoding.UTF8, new FileStreamOptions
+                   {
+                       Access = FileAccess.Write,
+                       Mode = FileMode.Create
+                   }))
             {
-                Runtime.PythonDLL = "python311.dll";
-                PythonEngine.Initialize();
+                streamWriter.WriteLine($"{Globals.Iterations}");
+
+                for (var i = 0; i < Globals.MatrixSize; i++)
+                {
+                    for (var j = 0; j < Globals.MatrixSize - 1; j++)
+                    {
+                        streamWriter.Write($"{Globals.Distances[i][j]}, ");
+                    }
+
+                    streamWriter.Write($"{Globals.Distances[i][Globals.MatrixSize - 1]}");
+                    streamWriter.WriteLine();
+                }
             }
 
-            using var _ = Py.GIL();
-            // importing
-            dynamic elkai = Py.Import("elkai");
+            // run the script, wait for it to finish
+            Solution = new int[Globals.MatrixSize];
+            var solver = Process.Start("./solve.exe");
 
-            dynamic distances = Globals.Distances;
+            while (!solver.HasExited)
+            {
+                Thread.Sleep(100);
+            }
 
-            dynamic edges = elkai.DistanceMatrix(distances);
-
-            dynamic solution = edges.solve_tsp(Globals.Iterations);
-
-            // solution is loop by default so pop
-            solution.pop();
-
-            // to parse from python to c# 
-            string solutionInString = solution.ToString();
-            solutionInString = solutionInString[1..^1];
-            Solution = solutionInString.Split(',').Select(int.Parse).ToArray();
-            
+            // script will produce solution in the same file, we read it
+            using var streamReader = new StreamReader("./temp.txt", Encoding.UTF8);
+            var solutionFromFile = streamReader.ReadLine();
+            Solution = solutionFromFile![1..^1].Split(',').Select(int.Parse).ToArray();
         }
     }
 }

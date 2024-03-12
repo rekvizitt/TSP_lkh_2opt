@@ -1,12 +1,13 @@
 ﻿using System.Windows;
 
-namespace GKH;
-
-public class App(MainWindow mainWindow) : Application
+namespace GKH
 {
-    protected override void OnStartup(StartupEventArgs e)
+    public class App(MainWindow mainWindow) : Application
     {
-        mainWindow.Show();
-        base.OnStartup(e);
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            mainWindow.Show();
+            base.OnStartup(e);
+        }
     }
 }

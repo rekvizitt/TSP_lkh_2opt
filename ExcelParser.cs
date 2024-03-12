@@ -8,10 +8,8 @@ namespace GKH
         // singletone
         private static FastExcel.FastExcel? _excelManager;
 
-        private static FastExcel.FastExcel ExcelManager
-        {
-            get { return _excelManager ??= new FastExcel.FastExcel(new FileInfo(Globals.FileName)); }
-        }
+        private static FastExcel.FastExcel ExcelManager =>
+            _excelManager ??= new FastExcel.FastExcel(new FileInfo(Globals.FileName));
 
         public static IEnumerable<string> ParseWorksheets()
         {
@@ -32,7 +30,7 @@ namespace GKH
                     Globals.MatrixX,
                     Globals.MatrixX + Globals.MatrixSize - 1)).ToArray();
 
-            int[][] distances = new int[Globals.MatrixSize][];
+            var distances = new int[Globals.MatrixSize][];
 
             for (var i = 0; i < Globals.MatrixSize; i++)
             {
