@@ -1,10 +1,7 @@
 Установка:
-Необходимые шаги:
 
 1. Установить .NET 8 (Desktop
    Runtime). https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-8.0.2-windows-x64-installer
-2. Установить Python 3.11 (https://www.python.org/downloads/release/python-3110/)
-3. Установить дополнительный пакет: pip install elkai
 
 UI:
 ![image](https://github.com/glebtyanov/TSP_lkh_2opt/assets/85569847/4d932981-0ee6-4968-bdae-aaa0e70ec415)
@@ -29,3 +26,4 @@ UI:
 6. Выберите метод решения. Тесты показывают, что до размера матрицы 40х40 2opt (с большим кол-вом итераций) и LKH
    сгенерируют ~одинаковые результаты.
    На больших размерах LKH стабильно генерирует гораздо более лучшие решения. 
+
