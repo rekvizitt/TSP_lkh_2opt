@@ -17,6 +17,7 @@ namespace GKH
         public static int MatrixX { get; internal set; }
         public static int MatrixY { get; internal set; }
         public static int Iterations { get; internal set; }
+        public static int Repeats { get; internal set; } 
         public static int SelectedMethod { get; internal set; }
 
         public static int[][] Distances { get; internal set; }
@@ -29,6 +30,7 @@ namespace GKH
                 MatrixX = MatrixX,
                 MatrixY = MatrixY,
                 Iterations = Iterations,
+                Repeats = Repeats, 
                 FileName = FileName,
                 SelectedWorksheet = SelectedWorksheet,
                 SelectedMethod = SelectedMethod
@@ -52,6 +54,7 @@ namespace GKH
             MatrixX = state.MatrixX;
             MatrixY = state.MatrixY;
             Iterations = state.Iterations;
+            Repeats = state.Repeats;
             FileName = state.FileName;
             SelectedWorksheet = state.SelectedWorksheet;
             SelectedMethod = state.SelectedMethod;
@@ -63,6 +66,7 @@ namespace GKH
             public int MatrixX { get; set; }
             public int MatrixY { get; set; }
             public int Iterations { get; set; }
+            public int Repeats { get; set; }
             public string FileName { get; set; }
             public string SelectedWorksheet { get; set; }
             public int SelectedMethod { get; set; }
