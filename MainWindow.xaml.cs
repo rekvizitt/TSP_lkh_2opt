@@ -14,6 +14,7 @@ namespace GKH
     {
         private bool _isRunning;
         private volatile bool _shouldStopCalculation;
+        private bool _dataLoaded;
 
         public MainWindow()
         {
@@ -24,8 +25,8 @@ namespace GKH
             try
             {
                 SelectWorksheet();
-
                 Globals.Distances = ExcelParser.TryParse();
+                _dataLoaded = true;
             }
             catch (InvalidDataException)
             {
@@ -45,23 +46,25 @@ namespace GKH
                 Log(e.GetType().ToString());
             }
 
+            if (!_dataLoaded)
+            {
+                Log("Невозможно продолжить выполнение без данных. Пожалуйста, проверьте файл и попробуйте снова.");
+                return;
+            }
+
             SolverComboBox.ItemsSource = new List<string> { "LKH", "2opt" };
             SolverComboBox.SelectedIndex = Globals.SelectedMethod;
-
-            return;
-
-            void ParseGlobals()
-            {
-                Globals.LoadState();
-                FileNameLabel.Content = Globals.FileName;
-                WorksheetComboBox.SelectedItem = Globals.SelectedWorksheet;
-                XTextBox.Text = Globals.MatrixX.ToString();
-                YTextBox.Text = Globals.MatrixY.ToString();
-                MatrixSizeTextBox.Text = Globals.MatrixSize.ToString();
-                IterationsTextBox.Text = Globals.Iterations.ToString();
-            }
         }
-
+        private void ParseGlobals()
+        {
+            Globals.LoadState();
+            FileNameLabel.Content = Globals.FileName;
+            WorksheetComboBox.SelectedItem = Globals.SelectedWorksheet;
+            XTextBox.Text = Globals.MatrixX.ToString();
+            YTextBox.Text = Globals.MatrixY.ToString();
+            MatrixSizeTextBox.Text = Globals.MatrixSize.ToString();
+            IterationsTextBox.Text = Globals.Iterations.ToString();
+        }
         private void SelectWorksheet()
         {
             WorksheetComboBox.ItemsSource = ExcelParser.ParseWorksheets();
@@ -90,7 +93,8 @@ namespace GKH
                 try
                 {
                     SelectWorksheet();
-                    Log("Данные успешно загружены");
+                    ParseGlobals();
+                    _dataLoaded = true;
                 }
                 catch (Exception)
                 {
@@ -135,6 +139,11 @@ namespace GKH
 
         private void SearchButton_OnClick(object sender, RoutedEventArgs e)
         {
+            if (!_dataLoaded)
+            {
+                Log("Данные не были загружены. Пожалуйста, проверьте файл и попробуйте снова.");
+                return;
+            }
             if (_isRunning)
             {
                 _shouldStopCalculation = true;
