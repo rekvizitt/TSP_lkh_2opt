@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
+using System.Text.Json;
 
 namespace GKH
 {
@@ -81,6 +82,10 @@ namespace GKH
             Dispatcher.Invoke(() => { LogTextBox.Text += $"{message}\n"; });
         }
 
+        private void ClearLog()
+        {
+            Dispatcher.Invoke(() => { LogTextBox.Clear(); });
+        }
         private void ChooseFileButton_OnClick(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new();
@@ -237,11 +242,28 @@ namespace GKH
 
                 var bestSolution = solutions.MinBy(ISolver.GetSum)!;
                 totalStopwatch.Stop();
-
+                var solutionData = new SolutionData
+                {
+                    Algorithm = ((Algorithms)Globals.SelectedMethod).ToString(),
+                    Solution = bestSolution,
+                    Costs = ISolver.GetCosts(bestSolution),
+                    TotalSum = ISolver.GetSum(bestSolution),
+                    ElapsedMilliseconds = totalStopwatch.ElapsedMilliseconds
+                };
                 Log($"Решение: {ISolver.PrintSolution(bestSolution)}");
                 Log($"Суммы переходов: {ISolver.PrintCosts(bestSolution, ISolver.GetCosts(bestSolution))}");
                 Log($"Полная сумма: {ISolver.GetSum(bestSolution)}");
                 Log($"Всего затрачено: {totalStopwatch.ElapsedMilliseconds} мс");
+                Dispatcher.Invoke(() =>
+                {
+                    if (SaveToJsonCheckBox.IsChecked == true)
+                    {
+                        Log("Сохранение в JSON...");
+                        string jsonFilePath = Path.Combine(Globals.CurrentDirectoryPath, "solution.json");
+                        SaveToJson(solutionData, jsonFilePath);
+                        Log($"Данные сохранены в файл: {jsonFilePath}");
+                    }
+                });
 
                 if (iterationsPassed != 0)
                 {
@@ -259,11 +281,21 @@ namespace GKH
             }) { Priority = ThreadPriority.Highest };
 
             searchThread.Start(SearchButton);
+            
         }
 
         private void SolverComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Globals.SelectedMethod = SolverComboBox.SelectedIndex;
+        }
+        private void ClearLogButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            ClearLog();
+        }
+        private void SaveToJson(SolutionData solutionData, string filePath)
+        {
+            string jsonString = JsonSerializer.Serialize(solutionData, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(filePath, jsonString);
         }
     }
 }
