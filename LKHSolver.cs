@@ -12,10 +12,10 @@ namespace GKH
         {
             // to solve using lkh we use python script, to transfer data between script and this app we use temp.txt
             using (var streamWriter = new StreamWriter("./temp.txt", Encoding.UTF8, new FileStreamOptions
-                   {
-                       Access = FileAccess.Write,
-                       Mode = FileMode.Create
-                   }))
+            {
+                Access = FileAccess.Write,
+                Mode = FileMode.Create
+            }))
             {
                 streamWriter.WriteLine($"{Globals.Iterations}");
 
@@ -33,17 +33,24 @@ namespace GKH
 
             // run the script, wait for it to finish
             Solution = new int[Globals.MatrixSize];
-            var solver = Process.Start("./solve.exe");
 
-            while (!solver.HasExited)
+            var startInfo = new ProcessStartInfo
             {
-                Thread.Sleep(100);
-            }
+                FileName = "./solve.exe",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            };
 
-            // script will produce solution in the same file, we read it
-            using var streamReader = new StreamReader("./temp.txt", Encoding.UTF8);
-            var solutionFromFile = streamReader.ReadLine();
-            Solution = solutionFromFile![1..^1].Split(',').Select(int.Parse).ToArray();
+            using (var solver = Process.Start(startInfo))
+            {
+                solver.WaitForExit();
+
+                // script will produce solution in the same file, we read it
+                using var streamReader = new StreamReader("./temp.txt", Encoding.UTF8);
+                var solutionFromFile = streamReader.ReadLine();
+                Solution = solutionFromFile![1..^1].Split(',').Select(int.Parse).ToArray();
+            }
         }
     }
 }
