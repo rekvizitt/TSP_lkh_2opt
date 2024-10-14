@@ -17,6 +17,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -30,7 +32,6 @@
             <Button Margin="10 0 0 0" Width="100" Name="ChooseFileButton" Click="ChooseFileButton_OnClick">Выбрать</Button>
             <Label Margin="10 0 0 0" Width="400" Name="FileNameLabel" />
         </StackPanel>
-
 
         <!-- 2nd Row: List Selector -->
         <StackPanel Margin="5" Grid.Row="2" Orientation="Horizontal">
@@ -57,15 +58,12 @@
                      SelectionChanged="MatrixSizeTextBox_OnSelectionChanged" />
         </StackPanel>
 
-        <!-- 4th Row: Iterations -->
+        <!-- 5th Row: Iterations -->
         <StackPanel Grid.Row="5" Margin="5" Orientation="Horizontal">
             <TextBlock Text="Итерации: " />
             <TextBox Name="IterationsTextBox" Margin="10 0 0 0" Width="50"
                      SelectionChanged="IterationsTextBox_OnSelectionChanged" />
         </StackPanel>
-
-        <!-- 5th Row: Separator -->
-        <Separator Grid.Row="7" Margin="0,10,0,10" />
 
         <StackPanel Margin="5" Grid.Row="6" Orientation="Horizontal">
             <TextBlock Text="Метод решения: " />
@@ -73,12 +71,26 @@
                       Name="SolverComboBox"
                       SelectionChanged="SolverComboBox_OnSelectionChanged" />
         </StackPanel>
+        <!-- 6th Row: Save to JSON CheckBox -->
+        <StackPanel Margin="5" Grid.Row="7" Orientation="Horizontal">
+            <TextBlock Text="Сохранить в JSON: " />
+            <CheckBox Margin="10 0 0 0" Name="SaveToJsonCheckBox" VerticalAlignment="Center" />
+        </StackPanel>
 
-        <!-- 6th Row: Log -->
-        <TextBlock Margin="6" Grid.Row="8" Text="Лог:" Name="LogTitleTextBlock" />
+        <!-- 7th Row: Clear Log Button -->
+        <Button Width="100" Margin="5" Grid.Row="8" Content="Очистить Log" HorizontalAlignment="Left" VerticalAlignment="Top"
+                Name="ClearLogButton"
+                Click="ClearLogButton_OnClick" />
 
-        <!-- 7th Row: Log Text Area -->
-        <TextBox Name="LogTextBox" Margin="5" Grid.Row="9" FontSize="12" AcceptsReturn="True" TextWrapping="Wrap"
+        <!-- 8th Row: Separator -->
+        <Separator Grid.Row="9" Margin="0,10,0,10" />
+
+
+        <!-- 9th Row: Log -->
+        <TextBlock Margin="6" Grid.Row="10" Text="Лог:" Name="LogTitleTextBlock" />
+
+        <!-- 10th Row: Log Text Area -->
+        <TextBox Name="LogTextBox" Margin="5" Grid.Row="11" FontSize="12" AcceptsReturn="True" TextWrapping="Wrap"
                  VerticalScrollBarVisibility="Auto" IsReadOnly="True" />
     </Grid>
 </Window>
