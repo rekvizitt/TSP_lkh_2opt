@@ -65,6 +65,7 @@ namespace GKH
             YTextBox.Text = Globals.MatrixY.ToString();
             MatrixSizeTextBox.Text = Globals.MatrixSize.ToString();
             IterationsTextBox.Text = Globals.Iterations.ToString();
+            RepeatsTextBox.Text = Globals.Repeats.ToString();
         }
         private void SelectWorksheet()
         {
@@ -141,6 +142,11 @@ namespace GKH
             int.TryParse(IterationsTextBox.Text, out var iterations);
             Globals.Iterations = iterations;
         }
+        private void RepeatsTextBox_OnSelectionChanged(object sender, RoutedEventArgs e)
+        {
+            int.TryParse(RepeatsTextBox.Text, out var repeats);
+            Globals.Repeats = repeats;
+        }
 
         private void SearchButton_OnClick(object sender, RoutedEventArgs e)
         {
@@ -172,101 +178,105 @@ namespace GKH
                 var solutions = new ConcurrentBag<int[]>();
                 var totalStopwatch = Stopwatch.StartNew();
 
-                switch ((Algorithms)Globals.SelectedMethod)
+                for (var repeat = 0; repeat < Globals.Repeats; repeat++)
                 {
-                    case Algorithms.TwoOpt:
+                    switch ((Algorithms)Globals.SelectedMethod)
                     {
-                        var semaphoreSlim = new SemaphoreSlim(Environment.ProcessorCount - 1);
-                        var threads = new ConcurrentDictionary<Thread, int>();
-
-                        for (var iteration = 0; iteration < Globals.Iterations; iteration++)
-                        {
-                            if (_shouldStopCalculation)
+                        case Algorithms.TwoOpt:
                             {
-                                Log("Остановка");
-                                iterationsPassed = iteration;
+                                var semaphoreSlim = new SemaphoreSlim(Environment.ProcessorCount - 1);
+                                var threads = new ConcurrentDictionary<Thread, int>();
+
+                                for (var iteration = 0; iteration < Globals.Iterations; iteration++)
+                                {
+                                    if (_shouldStopCalculation)
+                                    {
+                                        Log("Остановка");
+                                        iterationsPassed = iteration;
+                                        break;
+                                    }
+
+                                    semaphoreSlim.Wait();
+
+                                    var thread = new Thread(values =>
+                                    {
+                                        var (solutionsBag, semaphore, i, threadList, currentThread) =
+                                            values as (ConcurrentBag<int[]>, SemaphoreSlim, int,
+                                                ConcurrentDictionary<Thread, int>,
+                                                Thread)? ?? (null, null, 0, null, null)!;
+
+                                        var solver = new TwoOptSolver();
+
+                                        var stopwatch = Stopwatch.StartNew();
+
+                                        solver.Solve();
+                                        solutionsBag.Add(solver.Solution);
+
+                                        stopwatch.Stop();
+                                        threadList.TryRemove(currentThread, out _);
+                                        semaphore.Release();
+                                    })
+                                    { IsBackground = true, Priority = ThreadPriority.Highest };
+
+                                    threads.TryAdd(thread, 0);
+                                    thread.Start(
+                                        new ValueTuple<ConcurrentBag<int[]>, SemaphoreSlim, int,
+                                            ConcurrentDictionary<Thread, int>,
+                                            Thread>(solutions, semaphoreSlim, iteration, threads, thread));
+                                }
+
+
+                                while (!threads.IsEmpty)
+                                {
+                                    Thread.Sleep(1000);
+                                }
+
                                 break;
                             }
-
-                            semaphoreSlim.Wait();
-
-                            var thread = new Thread(values =>
+                        case Algorithms.Lkh:
                             {
-                                var (solutionsBag, semaphore, i, threadList, currentThread) =
-                                    values as (ConcurrentBag<int[]>, SemaphoreSlim, int,
-                                        ConcurrentDictionary<Thread, int>,
-                                        Thread)? ?? (null, null, 0, null, null)!;
+                                Dispatcher.Invoke(() => { SearchButton.IsEnabled = false; });
 
-                                var solver = new TwoOptSolver();
-
-                                var stopwatch = Stopwatch.StartNew();
+                                var solver = new LkhSolver();
 
                                 solver.Solve();
-                                solutionsBag.Add(solver.Solution);
+                                solutions.Add(solver.Solution);
 
-                                stopwatch.Stop();
-                                threadList.TryRemove(currentThread, out _);
-                                semaphore.Release();
-                            }) { IsBackground = true, Priority = ThreadPriority.Highest };
+                                Dispatcher.Invoke(() => { SearchButton.IsEnabled = true; });
 
-                            threads.TryAdd(thread, 0);
-                            thread.Start(
-                                new ValueTuple<ConcurrentBag<int[]>, SemaphoreSlim, int,
-                                    ConcurrentDictionary<Thread, int>,
-                                    Thread>(solutions, semaphoreSlim, iteration, threads, thread));
-                        }
-
-
-                        while (!threads.IsEmpty)
-                        {
-                            Thread.Sleep(1000);
-                        }
-
-                        break;
+                                break;
+                            }
                     }
-                    case Algorithms.Lkh:
+                    var bestSolution = solutions.MinBy(ISolver.GetSum)!;
+                    totalStopwatch.Stop();
+                    var solutionData = new SolutionData
                     {
-                        Dispatcher.Invoke(() => { SearchButton.IsEnabled = false; });
-
-                        var solver = new LkhSolver();
-
-                        solver.Solve();
-                        solutions.Add(solver.Solution);
-
-                        Dispatcher.Invoke(() => { SearchButton.IsEnabled = true; });
-
-                        break;
-                    }
+                        Algorithm = ((Algorithms)Globals.SelectedMethod).ToString(),
+                        Solution = bestSolution,
+                        Costs = ISolver.GetCosts(bestSolution),
+                        TotalSum = ISolver.GetSum(bestSolution),
+                        ElapsedMilliseconds = totalStopwatch.ElapsedMilliseconds
+                    };
+                    Log($"Решение: {ISolver.PrintSolution(bestSolution)}");
+                    Log($"Суммы переходов: {ISolver.PrintCosts(bestSolution, ISolver.GetCosts(bestSolution))}");
+                    Log($"Полная сумма: {ISolver.GetSum(bestSolution)}");
+                    Log($"Всего затрачено: {totalStopwatch.ElapsedMilliseconds} мс");
+                    Dispatcher.Invoke(() =>
+                    {
+                        if (SaveToJsonCheckBox.IsChecked == true)
+                        {
+                            Log("Сохранение в JSON...");
+                            DateTime currentTime = DateTime.Now;
+                            string timestamp = currentTime.ToString("yyyy-MM-dd_HH-mm-ss");
+                            string jsonFileName = $"solution_{timestamp}.json";
+                            string jsonFilePath = Path.Combine(Globals.CurrentDirectoryPath, jsonFileName);
+                            SaveToJson(solutionData, jsonFilePath);
+                            Log($"Данные сохранены в файл: {jsonFilePath}");
+                        }
+                    });
                 }
 
-
-                var bestSolution = solutions.MinBy(ISolver.GetSum)!;
-                totalStopwatch.Stop();
-                var solutionData = new SolutionData
-                {
-                    Algorithm = ((Algorithms)Globals.SelectedMethod).ToString(),
-                    Solution = bestSolution,
-                    Costs = ISolver.GetCosts(bestSolution),
-                    TotalSum = ISolver.GetSum(bestSolution),
-                    ElapsedMilliseconds = totalStopwatch.ElapsedMilliseconds
-                };
-                Log($"Решение: {ISolver.PrintSolution(bestSolution)}");
-                Log($"Суммы переходов: {ISolver.PrintCosts(bestSolution, ISolver.GetCosts(bestSolution))}");
-                Log($"Полная сумма: {ISolver.GetSum(bestSolution)}");
-                Log($"Всего затрачено: {totalStopwatch.ElapsedMilliseconds} мс");
-                Dispatcher.Invoke(() =>
-                {
-                    if (SaveToJsonCheckBox.IsChecked == true)
-                    {
-                        Log("Сохранение в JSON...");
-                        DateTime currentTime = DateTime.Now;
-                        string timestamp = currentTime.ToString("yyyy-MM-dd_HH-mm-ss");
-                        string jsonFileName = $"solution_{timestamp}.json";
-                        string jsonFilePath = Path.Combine(Globals.CurrentDirectoryPath, jsonFileName);
-                        SaveToJson(solutionData, jsonFilePath);
-                        Log($"Данные сохранены в файл: {jsonFilePath}");
-                    }
-                });
+                
 
                 if (iterationsPassed != 0)
                 {
