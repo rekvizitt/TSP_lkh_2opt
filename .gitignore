@@ -2,3 +2,4 @@
 .idea
 *.pdb
 obj
+bin/Debug/net8.0-windows/solution.json
