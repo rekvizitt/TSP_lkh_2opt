@@ -259,7 +259,10 @@ namespace GKH
                     if (SaveToJsonCheckBox.IsChecked == true)
                     {
                         Log("Сохранение в JSON...");
-                        string jsonFilePath = Path.Combine(Globals.CurrentDirectoryPath, "solution.json");
+                        DateTime currentTime = DateTime.Now;
+                        string timestamp = currentTime.ToString("yyyy-MM-dd_HH-mm-ss");
+                        string jsonFileName = $"solution_{timestamp}.json";
+                        string jsonFilePath = Path.Combine(Globals.CurrentDirectoryPath, jsonFileName);
                         SaveToJson(solutionData, jsonFilePath);
                         Log($"Данные сохранены в файл: {jsonFilePath}");
                     }
