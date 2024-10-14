@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="GKH" Height="600" Width="600"
+        WindowStartupLocation="CenterScreen"
         Closed="MainWindow_OnClosed">
     <Grid>
         <Grid.RowDefinitions>
