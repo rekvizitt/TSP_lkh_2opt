@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 
 namespace GKH
@@ -33,12 +34,18 @@ namespace GKH
                 SelectedMethod = SelectedMethod
             };
 
-            File.WriteAllText(Path.Combine(CurrentDirectoryPath, "state.json"), JsonSerializer.Serialize(state));
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            File.WriteAllText(Path.Combine(CurrentDirectoryPath, "state.json"), JsonSerializer.Serialize(state, options), Encoding.UTF8);
         }
 
         public static void LoadState()
         {
-            var json = File.ReadAllText(Path.Combine(CurrentDirectoryPath, "state.json"));
+            var json = File.ReadAllText(Path.Combine(CurrentDirectoryPath, "state.json"), Encoding.UTF8);
             var state = JsonSerializer.Deserialize<GlobalsState>(json)!;
 
             MatrixSize = state.MatrixSize;
