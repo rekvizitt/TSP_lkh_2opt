@@ -255,7 +255,9 @@ namespace GKH
                         Solution = bestSolution,
                         Costs = ISolver.GetCosts(bestSolution),
                         TotalSum = ISolver.GetSum(bestSolution),
+                        Iterations = Globals.Iterations,
                         ElapsedMilliseconds = totalStopwatch.ElapsedMilliseconds
+
                     };
                     Log($"Решение: {ISolver.PrintSolution(bestSolution)}");
                     Log($"Суммы переходов: {ISolver.PrintCosts(bestSolution, ISolver.GetCosts(bestSolution))}");
