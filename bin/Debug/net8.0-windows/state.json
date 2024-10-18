@@ -3,6 +3,7 @@
   "MatrixX": 2,
   "MatrixY": 18,
   "Iterations": 10,
+  "Repeats": 1,
   "FileName": "D:\\Лабы\\5\\курсовой проект\\Пример_Россия.xlsm",
   "SelectedWorksheet": "Лист4",
   "SelectedMethod": 0
