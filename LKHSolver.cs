@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
-using System.IO;
+using System.Linq;
 using System.Text;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace GKH
 {
@@ -10,45 +12,29 @@ namespace GKH
 
         public void Solve()
         {
-            // to solve using lkh we use python script, to transfer data between script and this app we use temp.txt
-            using (var streamWriter = new StreamWriter("./temp.txt", Encoding.UTF8, new FileStreamOptions
-            {
-                Access = FileAccess.Write,
-                Mode = FileMode.Create
-            }))
-            {
-                streamWriter.WriteLine($"{Globals.Iterations}");
+            // Формируем аргументы для запуска Python скрипта
+            var distancesString = string.Join(";", Globals.Distances.Select(row => string.Join(",", row)));
+            var iterations = Globals.Iterations.ToString();
 
-                for (var i = 0; i < Globals.MatrixSize; i++)
-                {
-                    for (var j = 0; j < Globals.MatrixSize - 1; j++)
-                    {
-                        streamWriter.Write($"{Globals.Distances[i][j]}, ");
-                    }
 
-                    streamWriter.Write($"{Globals.Distances[i][Globals.MatrixSize - 1]}");
-                    streamWriter.WriteLine();
-                }
-            }
-
-            // run the script, wait for it to finish
-            Solution = new int[Globals.MatrixSize];
-
+            // Запускаем Python скрипт с аргументами
             var startInfo = new ProcessStartInfo
             {
                 FileName = "./solve.exe",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                Arguments = $"{iterations} \"{distancesString}\""
             };
 
             using (var solver = Process.Start(startInfo))
             {
+                // Ждем завершения процесса
                 solver.WaitForExit();
 
-                // script will produce solution in the same file, we read it
-                using var streamReader = new StreamReader("./temp.txt", Encoding.UTF8);
-                var solutionFromFile = streamReader.ReadLine();
+                // Читаем решение из стандартного вывода Python скрипта
+                using var reader = solver.StandardOutput;
+                var solutionFromFile = reader.ReadLine();
                 Solution = solutionFromFile![1..^1].Split(',').Select(int.Parse).ToArray();
             }
         }
