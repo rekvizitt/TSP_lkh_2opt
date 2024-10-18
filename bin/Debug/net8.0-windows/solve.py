@@ -1,26 +1,34 @@
+import sys
 import elkai
 
-filename = './temp.txt'
-runs = 0
+# Проверяем, что переданы необходимые аргументы
+if len(sys.argv) < 3:
+    print("Usage: python your_script.py <runs> <distances>")
+    sys.exit(1)
+
+# Получаем аргументы из командной строки
+runs = int(sys.argv[1])
+distances_input = sys.argv[2]
+
+# Преобразуем строку с расстояниями в список списков
 distances = []
+try:
+    for line in distances_input.split(';'):
+        distances.append([int(num) for num in line.split(',')])
+except ValueError:
+    print("Error: Invalid distance value. Please ensure all distances are integers.")
+    sys.exit(1)
 
-with open(filename, 'r', encoding='utf-8-sig') as file:
-    lines = file.readlines()
-    runs = int(lines[0])
-
-    for line in lines[1:]:
-        distances.append([int(num) for num in line.strip().split(', ')])
-
+# Создаем матрицу расстояний
 edges = elkai.DistanceMatrix(distances)
 
-solution = edges.solve_tsp(runs=runs)
+# Решаем задачу коммивояжера
+solution = edges.solve_tsp(runs)
 
-# solution is looped by default
+# Удаляем последний элемент, если он является циклом
 solution.pop()
 
-# lets say we go from city i to city j, then the distance between them is distances[i][j]
-# so for each current city in solution we find distances[current][next] and sum them to get total 
+# Считаем общую стоимость
 total_cost = sum(distances[solution[i]][solution[i + 1]] for i in range(len(solution) - 1))
 
-with open(filename, 'w') as file:
-    file.write(str(solution) + '\n')
+print(str(solution))
